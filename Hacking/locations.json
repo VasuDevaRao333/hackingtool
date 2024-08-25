@@ -4,5 +4,17 @@
     "longitude": 80.6465,
     "timestamp": "2024-08-25T05:38:02.825Z",
     "googleMapsUrl": "https://www.google.com/maps?q=16.5104,80.6465"
+  },
+  {
+    "latitude": 16.5043227,
+    "longitude": 80.6655464,
+    "timestamp": "2024-08-25T06:27:30.953Z",
+    "googleMapsUrl": "https://www.google.com/maps?q=16.5043227,80.6655464"
+  },
+  {
+    "latitude": 16.5043227,
+    "longitude": 80.6655464,
+    "timestamp": "2024-08-25T06:27:36.012Z",
+    "googleMapsUrl": "https://www.google.com/maps?q=16.5043227,80.6655464"
   }
 ]
