@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        /* sstyle.css */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            overflow: hidden;
+            /* Prevent scrollbars */
+            background: url('https://www.pexels.com/photo/snow-covered-mountain-and-trees-1321062/') no-repeat center center fixed;
+            /* Background image */
+            background-size: cover;
+            /* Cover the entire viewport */
+        }
+
+        /* Container styling */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            /* Slightly transparent background */
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* Header styling */
+        h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        /* Form styling */
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* File input styling */
+        input[type="file"] {
+            padding: 10px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            background: #fff;
+            color: #333;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* Submit button styling */
+        input[type="submit"] {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        /* Preview area styling */
+        #preview {
+            margin-top: 20px;
+        }
+
+        /* Image preview styling */
+        #preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Upload an Image</h2>
+        <form id="uploadForm">
+            <input type="file" id="fileInput" name="file">
+            <input type="submit" value="Upload">
+        </form>
+        <div id="preview"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

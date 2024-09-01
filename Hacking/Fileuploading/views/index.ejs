@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Upload an Image</h2>
+
+        <!-- Display message if 'msg' is defined -->
+        <% if (typeof msg !=='undefined' ) { %>
+            <p class="msg">
+                <%= msg %>
+            </p>
+            <% } %>
+
+                <!-- Form for file upload -->
+                <form action="/upload" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="myImage">
+                    <input type="submit" value="Upload">
+                </form>
+
+                <!-- Display the uploaded file if 'file' is defined -->
+                <% if (typeof file !=='undefined' ) { %>
+                    <h3>Uploaded Image:</h3>
+                    <img src="<%= file %>" alt="Uploaded Image">
+                    <% } %>
+    </div>
+</body>
+
+</html>
