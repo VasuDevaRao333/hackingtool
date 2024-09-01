@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            background: url('https://images.unsplash.com/photo-1546456073-3b9a9289348f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwyMTk4NzF8MHwxfGFsbHwxfHx8fHx8fHwxNjcwMTI2MjU&ixlib=rb-1.2.1&q=80&w=1920') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            /* Ensure text is visible against the background */
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        video {
+            border: 1px solid #ccc;
+            background: rgba(0, 0, 0, 0.5);
+            /* Darken the video area slightly */
+            border-radius: 10px;
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+        }
+
+        canvas {
+            display: none;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .edit-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .edit-buttons button {
+            background-color: #28a745;
+            margin: 5px;
+        }
+
+        .edit-buttons button:hover {
+            background-color: #218838;
+        }
+
+        #capturedImage {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            button {
+                width: 90%;
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .edit-buttons {
+                flex-direction: column;
+            }
+
+            .edit-buttons button {
+                width: 90%;
+                margin: 5px auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            video {
+                width: 100%;
+                height: auto;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Capture 4k Image</h1>
+    <video id="video" autoplay></video>
+    <button id="captureButton">Capture Image</button>
+    <canvas id="canvas"></canvas>
+
+    <div class="edit-buttons">
+        <button id="editButton1">Edit Option 1</button>
+        <button id="editButton2">Edit Option 2</button>
+        <button id="editButton3">Edit Option 3</button>
+    </div>
+
+    <img id="capturedImage" src="" alt="Captured Image">
+
+    <script src="app.js"></script>
+</body>
+
+</html>
