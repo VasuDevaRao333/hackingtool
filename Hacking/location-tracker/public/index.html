@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracker</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+            text-align: center;
+        }
+
+        label,
+        input,
+        button {
+            display: block;
+            margin: 10px auto;
+        }
+
+        input[type="text"],
+        input[type="tel"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            #map {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Location Tracker</h1>
+        <label for="name">Name:</label>
+        <input type="text" id="name" placeholder="Enter your name">
+        <br>
+        <label for="phone">Phone Number:</label>
+        <input type="tel" id="phone" placeholder="Enter your phone number">
+        <br>
+        <button id="start-tracking">Start Tracking</button>
+        <button id="stop-tracking">Stop Tracking</button>
+        <p id="status"></p>
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        let intervalId;
+        let map;
+        let marker;
+
+        function initMap() {
+            map = L.map('map').setView([51.505, -0.09], 13); // Initial position (London)
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+        }
+
+        function startTracking() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+
+            if (!name || !phone) {
+                document.getElementById('status').textContent = 'Please enter both name and phone number.';
+                return;
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    document.getElementById('status').textContent = 'Tracking...';
+
+                    // Set the initial map view
+                    map.setView([latitude, longitude], 13);
+
+                    // Add or update marker
+                    if (marker) {
+                        marker.setLatLng([latitude, longitude]);
+                    } else {
+                        marker = L.marker([latitude, longitude]).addTo(map);
+                    }
+
+                    const startTime = Date.now();
+                    intervalId = setInterval(() => {
+                        navigator.geolocation.getCurrentPosition(position => {
+                            const { latitude, longitude } = position.coords;
+
+                            // Update marker position
+                            marker.setLatLng([latitude, longitude]);
+
+                            fetch('/location', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ name, phone, latitude, longitude }),
+                            })
+                                .then(response => response.text())
+                                .then(data => {
+                                    console.log('Location data sent:', data);
+                                })
+                                .catch(error => {
+                                    console.error('Error sending location data:', error);
+                                });
+
+                        }, error => {
+                            console.error('Error getting location:', error);
+                        });
+
+                        // Stop tracking after 1 hour
+                        if (Date.now() - startTime >= 3600000) { // 1 hour in milliseconds
+                            clearInterval(intervalId);
+                            document.getElementById('status').textContent = 'Tracking stopped.';
+                        }
+                    }, 10000); // Send location every 10 seconds
+
+                }, error => {
+                    document.getElementById('status').textContent = 'Error retrieving location.';
+                    console.error('Error retrieving location:', error);
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function stopTracking() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                document.getElementById('status').textContent = 'Tracking stopped.';
+            }
+        }
+
+        document.getElementById('start-tracking').addEventListener('click', startTracking);
+        document.getElementById('stop-tracking').addEventListener('click', stopTracking);
+
+        // Initialize the map
+        initMap();
+    </script>
+</body>
+
+</html>
