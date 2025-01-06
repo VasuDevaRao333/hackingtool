@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Matching Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 20px;
+        }
+
+        #player-form-container {
+            margin-top: 20px;
+        }
+
+        #game-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+            background-color: #007bff;
+            border-radius: 10px;
+            cursor: pointer;
+            perspective: 1000px;
+            transition: transform 0.3s ease;
+        }
+
+        .card-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            visibility: hidden;
+            color: white;
+            border-radius: 10px;
+            background-color: #007bff;
+            transition: visibility 0s linear 0.3s, transform 0.3s ease;
+        }
+
+        .card.flipped .card-content {
+            transform: rotateY(0);
+            visibility: visible;
+            background-color: #fff;
+            color: #333;
+        }
+
+        .card.matched {
+            background-color: #28a745;
+            color: white;
+            cursor: default;
+        }
+
+        #status {
+            margin-top: 20px;
+        }
+
+        #video-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        video {
+            width: 300px;
+            height: 200px;
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Memory Card Matching Game</h1>
+    <div id="player-form-container">
+        <form id="player-form">
+            <label for="player-name">Enter Your Name:</label>
+            <input type="text" id="player-name" required>
+            <button type="submit">Join Game</button>
+        </form>
+    </div>
+
+    <div id="video-container" style="display: none;">
+        <video id="player1Video" autoplay muted></video>
+        <video id="player2Video" autoplay muted></video>
+    </div>
+
+    <div id="game-container" style="display: none;">
+        <div id="game-board"></div>
+    </div>
+
+    <div id="status" style="display: none;">
+        <p id="player-status"></p>
+        <p id="turn-status"></p>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const playerFormContainer = document.getElementById("player-form-container");
+        const playerForm = document.getElementById("player-form");
+        const playerNameInput = document.getElementById("player-name");
+        const gameContainer = document.getElementById("game-container");
+        const statusContainer = document.getElementById("status");
+        const gameBoard = document.getElementById("game-board");
+        const playerStatus = document.getElementById("player-status");
+        const turnStatus = document.getElementById("turn-status");
+        const videoContainer = document.getElementById("video-container");
+        const player1Video = document.getElementById("player1Video");
+        const player2Video = document.getElementById("player2Video");
+
+        let playerName = "";
+        let isMyTurn = false;
+        let selectedCards = [];
+        let boardLocked = false;
+        let localStream;
+        let peerConnections = {};
+
+        playerForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            playerName = playerNameInput.value.trim();
+            if (playerName) {
+                socket.emit("playerJoined", { name: playerName });
+                playerFormContainer.style.display = "none";
+                gameContainer.style.display = "block";
+                statusContainer.style.display = "block";
+                videoContainer.style.display = "flex";
+            }
+        });
+
+        socket.on("playerStatus", (status) => {
+            playerStatus.textContent = status;
+        });
+
+        socket.on("initializeBoard", (cards) => {
+            gameBoard.innerHTML = "";
+            cards.forEach((_, index) => {
+                const cardElement = document.createElement("div");
+                cardElement.classList.add("card");
+                cardElement.dataset.index = index;
+
+                const cardContent = document.createElement("div");
+                cardContent.classList.add("card-content");
+
+                cardElement.appendChild(cardContent);
+                gameBoard.appendChild(cardElement);
+            });
+        });
+
+        gameBoard.addEventListener("click", (e) => {
+            if (!isMyTurn || boardLocked) return;
+
+            const card = e.target.closest(".card");
+            if (!card || card.classList.contains("flipped") || card.classList.contains("matched")) return;
+
+            card.classList.add("flipped");
+            selectedCards.push(card);
+
+            socket.emit("revealCard", { index: card.dataset.index });
+
+            if (selectedCards.length === 2) {
+                boardLocked = true;
+                const [firstCard, secondCard] = selectedCards;
+
+                socket.emit("checkMatch", {
+                    firstIndex: firstCard.dataset.index,
+                    secondIndex: secondCard.dataset.index,
+                });
+            }
+        });
+
+        socket.on("cardRevealed", ({ index, value }) => {
+            const card = gameBoard.children[index];
+            const cardContent = card.querySelector(".card-content");
+
+            // Update card content and mark it as flipped
+            cardContent.textContent = value;
+        });
+
+        socket.on("matchResult", ({ match, indices }) => {
+            if (match) {
+                indices.forEach((index) => {
+                    const card = gameBoard.children[index];
+                    card.classList.add("matched");
+                });
+            } else {
+                setTimeout(() => {
+                    indices.forEach((index) => {
+                        const card = gameBoard.children[index];
+                        card.classList.remove("flipped");
+                    });
+                }, 1000);
+            }
+            selectedCards = [];
+            boardLocked = false;
+        });
+
+        socket.on("turnUpdate", (turnInfo) => {
+            isMyTurn = turnInfo.isMyTurn;
+            turnStatus.textContent = turnInfo.message;
+            boardLocked = !isMyTurn;
+        });
+
+        socket.on("gameOver", ({ message }) => {
+            alert(message); // Display the winner's message in an alert
+            location.reload(); // Reload the page to reset the game
+        });
+
+        // WebRTC: Handling video streaming
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                player1Video.srcObject = localStream;
+                socket.emit('playerJoined', { name: playerName });
+            })
+            .catch(err => console.error("Error accessing webcam: ", err));
+
+        // WebRTC Signaling: Listen for incoming video signal
+        socket.on('signal', (data) => {
+            const { from, signalData } = data;
+            if (from === socket.id) return;
+
+            if (!peerConnections[from]) {
+                const peerConnection = new RTCPeerConnection();
+                peerConnections[from] = peerConnection;
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+                peerConnection.ontrack = (event) => {
+                    if (event.track.kind === 'video') {
+                        if (from === players[0].id) {
+                            player1Video.srcObject = event.streams[0];
+                        } else {
+                            player2Video.srcObject = event.streams[0];
+                        }
+                    }
+                };
+
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        socket.emit('signal', {
+                            to: from,
+                            signalData: { iceCandidate: event.candidate }
+                        });
+                    }
+                };
+
+                if (signalData.sdp) {
+                    peerConnection.setRemoteDescription(new RTCSessionDescription(signalData.sdp))
+                        .then(() => {
+                            if (signalData.sdp.type === 'offer') {
+                                return peerConnection.createAnswer();
+                            }
+                        })
+                        .then(answer => {
+                            return peerConnection.setLocalDescription(answer);
+                        })
+                        .then(() => {
+                            socket.emit('signal', {
+                                to: from,
+                                signalData: { sdp: peerConnection.localDescription }
+                            });
+                        });
+                }
+
+                if (signalData.iceCandidate) {
+                    peerConnection.addIceCandidate(new RTCIceCandidate(signalData.iceCandidate));
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
